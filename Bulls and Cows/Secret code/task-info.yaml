@@ -1,0 +1,236 @@
+type: edu
+files:
+  - name: src/bullscows/Main.java
+    visible: true
+    text: |
+      package bullscows;
+      
+      public class Main {
+          public static void main(String[] args) {
+              System.out.println("Hello World!");
+          }
+      }
+    learner_created: false
+  - name: test/BullsCowsTest.java
+    visible: false
+    text: |-
+      import bullscows.Main;
+      import org.hyperskill.hstest.dynamic.input.DynamicTestingMethod;
+      import org.hyperskill.hstest.stage.StageTest;
+      import org.hyperskill.hstest.testcase.CheckResult;
+      import org.hyperskill.hstest.testing.TestedProgram;
+      
+      import java.util.ArrayList;
+      import java.util.Arrays;
+      import java.util.LinkedHashSet;
+      import java.util.List;
+      import java.util.stream.Collectors;
+      
+      import static org.hyperskill.hstest.testing.expect.Expectation.expect;
+      
+      public class BullsCowsTest extends StageTest<String> {
+      
+          // basic test case
+          @DynamicTestingMethod
+          CheckResult test1() {
+              TestedProgram main = new TestedProgram();
+              main.start();
+              String output = main.execute("4").toLowerCase().trim();
+      
+              return outputCheck(output, 4);
+          }
+      
+          @DynamicTestingMethod
+          CheckResult test2() {
+              TestedProgram main = new TestedProgram();
+              main.start();
+              String output = main.execute("1").toLowerCase().trim();
+      
+              return outputCheck(output, 1);
+          }
+      
+          // test of incorrect input
+          @DynamicTestingMethod
+          CheckResult test4() {
+              TestedProgram main = new TestedProgram();
+              main.start();
+              String output = main.execute("11").toLowerCase().trim();
+      
+              return outputCheck(output, 11);
+          }
+      
+          @DynamicTestingMethod
+          CheckResult test5() {
+              TestedProgram main = new TestedProgram();
+              main.start();
+              String output = main.execute("6").toLowerCase().trim();
+      
+              return outputCheck(output, 6);
+          }
+      
+          @DynamicTestingMethod
+          CheckResult test6() {
+              TestedProgram main = new TestedProgram();
+              main.start();
+              String output = main.execute("3").toLowerCase().trim();
+      
+              return outputCheck(output, 3);
+          }
+      
+      
+          CheckResult outputCheck(String source, int length) {
+      
+              if (length > 10) {
+                  if (source.toLowerCase().contains("error")) {
+                      return CheckResult.correct();
+                  } else {
+                      return CheckResult.wrong("An error message expected with input " +
+                              "\"" + length + "\"");
+                  }
+              }
+      
+              List<Integer> integers = expect(source).toContain(1).integers();
+              source = "" + integers.get(0);
+      
+              if (source.length() != length) {
+                  return CheckResult.wrong("The output number of your program has " +
+                          "an incorrect length (found " + source.length() + ")");
+              }
+      
+              List<Integer> temp = stringToArrayOfNumbers(source);
+              temp = new ArrayList<>(new LinkedHashSet<>(temp));
+      
+              if (temp.toArray().length != source.length()) {
+                  return CheckResult.wrong("Digits in the generated number are not unique.");
+              }
+      
+              return CheckResult.correct();
+          }
+      
+          private static List<Integer> stringToArrayOfNumbers(String array) {
+              return Arrays.stream(array.split(""))
+                      .map(Integer::parseInt)
+                      .collect(Collectors.toList());
+          }
+      }
+    learner_created: false
+  - name: src/bullscows/SecretCode.java
+    visible: true
+    text: |-
+      package bullscows;
+      
+      public class SecretCode {
+          private final int secretCode = 9305;
+          public int getInt() { return secretCode; }
+      
+          public String getString() {
+              return "" + secretCode;
+          }
+      }
+    learner_created: true
+  - name: src/bullscows/Game.java
+    visible: true
+    text: |
+      package bullscows;
+      
+      import java.util.Scanner;
+      
+      public class Game {
+          void start() {
+              Scanner s = new Scanner(System.in);
+              SecretCode sc = new SecretCode();
+              UserInput userInput = new UserInput(s.nextLine());
+              Grade grade = new Grade(userInput, sc.getString());
+              System.out.println(grade);
+          }
+      }
+    learner_created: true
+  - name: src/bullscows/Grade.java
+    visible: true
+    text: |-
+      package bullscows;
+      
+      public class Grade {
+          private final UserInput userInput;
+          private final int bulls;
+          private final int cows;
+          private final String secretCode;
+      
+          public Grade(UserInput userInput, String secretCode) {
+              this.userInput = userInput;
+              this.secretCode = secretCode;
+              this.bulls = calculateBulls();
+              this.cows = calculateCows();
+          }
+      
+          private int calculateBulls() {
+              int bullsCount = 0;
+              for(int i = 0; i < secretCode.length(); i++) {
+                  if (secretCode.charAt(i) == userInput.get().charAt(i)) {
+                      bullsCount++;
+                  }
+              }
+              return bullsCount;
+          }
+      
+          private int calculateCows() {
+              int cowsCount = 0;
+              for(int i = 0; i < userInput.get().length(); i++) {
+                  for (int j = 0; j < secretCode.length(); j++) {
+                      if (i == j) {
+                          continue;
+                      }
+                      if (userInput.get().charAt(i) == secretCode.charAt(j)) {
+                          cowsCount++;
+                          break;
+                      }
+                  }
+              }
+              return cowsCount;
+          }
+      
+          @Override
+          public String toString() {
+              StringBuilder sb = new StringBuilder();
+              sb.append("Grade: ");
+              if (bulls == 0 && cows == 0) {
+                  sb.append("None. The secret code is ").append(secretCode).append(".");
+                  return sb.toString();
+              }
+              if(bulls > 0) {
+                  sb.append(bulls).append(" bull(s)");
+              }
+              if(bulls > 0 && cows > 0) {
+                  sb.append(" and ");
+              }
+              if(cows > 0) {
+                  sb.append(cows).append(" cow(s)");
+              }
+              sb.append(". The secret code is ").append(secretCode).append(".");
+      
+              return sb.toString();
+          }
+      }
+    learner_created: true
+  - name: src/bullscows/UserInput.java
+    visible: true
+    text: |
+      package bullscows;
+      
+      public class UserInput {
+          private final String userInput;
+          public UserInput(String s) {
+              userInput = s;
+          }
+      
+          public String get() {
+              return userInput;
+          }
+      }
+    learner_created: true
+feedback_link: https://hyperskill.org/learn/step/5431#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Mon, 04 Mar 2024 19:20:35 UTC"
+record: 3
